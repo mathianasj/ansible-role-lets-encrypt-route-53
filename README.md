@@ -32,6 +32,7 @@ Ansible 2.7+ is required for this role. If you are using an older version of Ans
   domain the SSL certificate is being generated for.
 * **ler53_aws_secret_key** - the secret key to an AWS user that is allowed to add records to the
   domain the SSL certificate is being generated for.
+* **ler53_aws_security_token** - the session token that is received by sts_assume_role
 * **ler53_route_53_domain** - the Route 53 (AWS) domain the SSL certificate is being generated
   for. This is a required parameter, if parameter `ler53_route_53_zone_id` is not supplied.
 * **ler53_route_53_zone_id** - the Route 53 (AWS) zone_id the SSL certificate is being generated
@@ -96,6 +97,14 @@ Ansible 2.7+ is required for this role. If you are using an older version of Ans
 ## Example Playbook
 
 ```yaml
+
+- community.aws.sts_assume_role:
+    aws_access_key: SomeAccessKey
+    aws_secret_key: SomeSecretKey
+    role_arn: SomeIAMRoleArn
+    role_session_name: SomeSessionName
+  register: assumed_role
+
 - name: Generate an SSL certificate for host.example.com
   hosts: host
   become: yes
@@ -103,9 +112,9 @@ Ansible 2.7+ is required for this role. If you are using an older version of Ans
   vars:
   - ler53_cert_common_name: host.example.com
   - ler53_route_53_domain: example.com
-  - ler53_aws_access_key: SomeAccessKey
-  - ler53_aws_secret_key: SomeSecretKey
-
+  - ler53_aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+  - ler53_aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+  - ler53_aws_security_token: "{{ assumed_role.sts_creds.session_token }}"
   roles:
   - mprahl.lets-encrypt-route-53
 ```
