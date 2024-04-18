@@ -163,7 +163,7 @@
     value: "\"{{ ler53_item.value['dns-01']['resource_value'] }}\""
     aws_access_key: "{{ ler53_aws_access_key }}"
     aws_secret_key: "{{ ler53_aws_secret_key }}"
-    security_token: "{{ ler53_aws_security_token }}"
+    session_token: "{{ ler53_aws_security_token }}"
     overwrite: yes
     wait: yes
   with_dict: "{{ lets_encrypt_challenge['challenge_data'] | default({}) }}"
@@ -198,7 +198,7 @@
     ttl: 5
     value: "\"{{ ler53_item.value['dns-01']['resource_value'] }}\""
     aws_access_key: "{{ ler53_aws_access_key }}"
-    aws_secret_key: "{{ ler53_aws_secret_key }}"
+    aws_session_key: "{{ ler53_aws_secret_key }}"
     security_token: "{{ ler53_aws_security_token }}"
   with_dict: "{{ lets_encrypt_challenge['challenge_data'] | default({}) }}"
   loop_control:
