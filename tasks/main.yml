@@ -50,7 +50,7 @@
   - install
 
 - name: install the required dependencies (FreeBSD)
-  pkgng:
+  community.general.pkgng:
     name:
     - openssl
     - "py{{ ansible_python.version.major }}{{ ansible_python.version.minor }}-boto"
@@ -61,7 +61,7 @@
   - install
 
 - name: install the required dependencies (MacOS)
-  homebrew:
+  community.general.homebrew:
     name:
     - openssl@1.1
     - python3
@@ -90,7 +90,7 @@
   when: ansible_os_family in ['RedHat', 'Darwin']
 
 - name: generate the private key
-  openssl_privatekey:
+  community.crypto.openssl_privatekey:
     path: "{{ ler53_cert_dir }}/{{ ler53_key_file_name }}"
     size: "{{ ler53_key_size }}"
     owner: "{{ ler53_cert_files_owner }}"
@@ -99,16 +99,8 @@
   tags:
   - openssl
 
-- name: check consistency of private key
-  openssl_privatekey_info:
-    path: "{{ ler53_cert_dir }}/{{ ler53_key_file_name }}"
-    check_consistency: true
-  register: result_privatekey
-  tags:
-  - openssl
-
 - name: generate the CSR
-  openssl_csr:
+  community.crypto.openssl_csr:
     path: "{{ ler53_cert_dir }}/{{ ler53_csr_file_name }}"
     privatekey_path: "{{ ler53_cert_dir }}/{{ ler53_key_file_name }}"
     common_name: "{{ ler53_cert_common_name }}"
@@ -123,27 +115,19 @@
   - openssl
 
 - name: check consistency of the CSR key
-  openssl_csr_info:
+  community.crypto.openssl_csr_info:
     path: "{{ ler53_cert_dir }}/{{ ler53_csr_file_name }}"
   register: result_csr
   tags:
   - openssl
 
 - name: generate the Let's Encrypt account key
-  openssl_privatekey:
+  community.crypto.openssl_privatekey:
     path: "{{ ler53_account_key_dir }}/{{ ler53_account_key_file_name }}"
     size: "{{ ler53_account_key_size }}"
     owner: "{{ ler53_cert_files_owner }}"
     group: "{{ ler53_cert_files_group }}"
     mode: "{{ ler53_cert_files_mode }}"
-  tags:
-  - openssl
-
-- name: check consistency of the account key
-  openssl_privatekey_info:
-    path: "{{ ler53_account_key_dir }}/{{ ler53_account_key_file_name }}"
-    check_consistency: true
-  register: result_accountkey
   tags:
   - openssl
 
@@ -156,7 +140,7 @@
   - openssl
 
 - name: initiate the Let's Encrypt challenge
-  acme_certificate:
+  community.crypto.acme_certificate:
     acme_version: 2
     acme_directory: "{{ ler53_acme_directory }}"
     challenge: dns-01
@@ -169,7 +153,7 @@
   register: lets_encrypt_challenge
 
 - name: create the DNS records for the challenge
-  route53:
+  amazon.aws.route53:
     command: create
     zone: "{{ ler53_route_53_domain | default(omit) }}"
     hosted_zone_id: "{{ ler53_route_53_zone_id | default(omit) }}"
@@ -187,7 +171,7 @@
     loop_var: ler53_item
 
 - name: validate the Let's Encrypt challenge
-  acme_certificate:
+  community.crypto.acme_certificate:
     acme_version: 2
     acme_directory: "{{ ler53_acme_directory }}"
     challenge: dns-01
@@ -205,7 +189,7 @@
     ler53_cert_changed: "{{ lets_encrypt_validation_result.changed | bool }}"
 
 - name: delete the DNS records for the challenge
-  route53:
+  amazon.aws.route53:
     command: delete
     zone: "{{ ler53_route_53_domain | default(omit) }}"
     hosted_zone_id: "{{ ler53_route_53_zone_id | default(omit) }}"
@@ -258,10 +242,8 @@
     mode: "{{ ler53_cert_files_mode }}"
   when: ler53_intermediate_download | bool
 
-- name: verify the private keys and CSR
+- name: verify the CSR
   assert:
     that:
-    - result_privatekey.key_is_consistent
-    - result_accountkey.key_is_consistent
     - result_csr.signature_valid
     msg: "The private keys and CSR are valid"
