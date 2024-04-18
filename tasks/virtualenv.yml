@@ -51,6 +51,7 @@
   - name: enum34
   - name: ipaddress
   - name: cffi
+  - name: packaging
   loop_control:
     loop_var: ler53_item
   tags:
