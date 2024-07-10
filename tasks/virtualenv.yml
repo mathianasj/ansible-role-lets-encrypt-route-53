@@ -2,7 +2,6 @@
 - name: install the virtualenv requirements (Red Hat)
   yum:
     name:
-    - python3-virtualenv
     - gcc
     - python3-devel
     - openssl-devel
@@ -42,6 +41,7 @@
     virtualenv: "{{ ler53_account_key_dir }}/ansible-lets-encrypt-virtualenv"
     # This is required for libselinux-python
     virtualenv_site_packages: yes
+    virtualenv_command: "python3 -m venv"
   with_items:
   # Update setuptools
   - name: setuptools>44.0.0,<45.0.0
